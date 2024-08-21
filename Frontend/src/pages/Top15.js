@@ -20,11 +20,22 @@ const Top15 = () => {
       });
   }, []);
 
-  return loading ? (
-    <DummyUi />
-  ) : (
-    <div>
-      <Cards apiData={data.coins} checker={"top15"} />
+  return (
+    <div className="container mx-auto p-6">
+      {/* Static UI Elements with Tailwind CSS */}
+      <div className="text-center my-8">
+        <h1 className="text-4xl font-bold text-gray-800">Top 15 Trending Cryptocurrencies</h1>
+        <p className="text-lg text-gray-600 mt-4">
+          Stay updated with the most popular cryptocurrencies in the market.
+        </p>
+      </div>
+      
+      {/* Dynamic UI */}
+      {loading ? (
+        <DummyUi />
+      ) : (
+        <Cards apiData={data.coins} checker={"top15"} />
+      )}
     </div>
   );
 };
