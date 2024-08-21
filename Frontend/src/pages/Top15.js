@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Cards from "../components/Cards";
-
+import DummyUi from "../components/DummyUi";
 
 const Top15 = () => {
   const [data, setData] = useState([]);
@@ -21,11 +21,7 @@ const Top15 = () => {
   }, []);
 
   return loading ? (
-    <div style={{display: "flex", justifyContent: "center", alignItems: "center", height: "100vh",flexDirection: "column",textAlign: "center"}}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "20px", color: "#333" }}>Loading...</h1>
-      <p style={{ marginBottom: "20px", color: "#666" }}>Fetching the top 15 trending coins...</p>
-  
-    </div>
+    <DummyUi />
   ) : (
     <div>
       <Cards apiData={data.coins} checker={"top15"} />

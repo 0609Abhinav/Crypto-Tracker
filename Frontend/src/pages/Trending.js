@@ -50,9 +50,9 @@ function Trending() {
           visible={true}
         />
       </div>
+      
     );
   }
-
   return (
     <div>
       <Cards apiData={data} />
