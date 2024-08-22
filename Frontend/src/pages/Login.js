@@ -5,12 +5,31 @@ import { useState } from "react";
 
 
 const Login = () => {
-  
           const [formData,setFormData] = useState({
-            email
-          })
+            email:"",
+            password:"",
+          });
+
+          function handleChange(event) {
+            setFormData({...formData,[event.target.name]:event.target.value});
+          }
+
+          async function handleSubmit(event){
+            event.preventDefault();
+            const data= await fetch("http://localhost:3001/api/v1/login",{
+              method:"POST",
+              headers:{
+                "Content-Type":"application/json",
+                },
+                body:JSON.stringify(formData),
+            });
+            const response = await data.json();
+          }
+          console.log(formData);
+
 
   return (
+
     <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
       <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex justify-center flex-1">
         <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-12">
@@ -18,18 +37,26 @@ const Login = () => {
             <h1 className="text-2xl xl:text-3xl font-extrabold">Log in</h1>
             <div className="w-full flex-1 mt-8">
               <div className="my-12 border-b text-center"></div>
-              <div className="mx-auto max-w-xs">
+              <form onSubmit={handleSubmit} className="mx-auto max-w-xs">
                 <input
                   className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
                   type="email"
+                  name="email"
+                  onChange={handleChange}
+                  value={formData.email}
+                  required
                   placeholder="Email"
                 />
                 <input
                   className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
                   type="password"
+                  name="password"
+                  onChange={handleChange}
+                  value={formData.password}
+                  required
                   placeholder="Password"
                 />
-                <button className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none">
+                <button  type="submit" className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none">
                   <svg
                     className="w-6 h-6 -ml-2"
                     fill="none"
@@ -44,10 +71,10 @@ const Login = () => {
                   </svg>
                   <span className="ml-3">Log in</span>
                 </button>
+                </form>
               </div>
             </div>
           </div>
-        </div>
         <div className="flex-1 bg-indigo-100 text-center hidden lg:flex">
           <div
             className="m-12 xl:m-16 w-full bg-contain bg-center bg-no-repeat"
