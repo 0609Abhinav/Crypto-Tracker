@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
@@ -7,28 +7,62 @@ const SignIn = () => {
     password: "",
   });
 
-  console.log(formData);
+  const [errors, setErrors] = useState({});
 
-  function handleChange(event) {
+  const validate = () => {
+    let errors = {};
+  
+    // Name validation
+    const namePattern = /^[A-Za-z\s]+$/;
+    if (!formData.name.trim()) {
+      errors.name = "Name is required";
+    } else if (!namePattern.test(formData.name)) {
+      errors.name = "Name can only contain letters and spaces";
+    }
+  
+    // Email validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!emailPattern.test(formData.email)) {
+      errors.email = "Email is not valid";
+    }
+  
+    // Password validation
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+  
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  
+
+  const handleChange = (event) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
-  }
+  };
 
-  async function handleSubmit(event) {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    if (validate()) {
+      try {
+        const data = await fetch("http://localhost:3001/api/v1/createuser", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
 
-    const data = await fetch("http://localhost:3001/api/v1/createuser", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    const response = await data.json();
-
-    console.log(response);
-  }
+        const response = await data.json();
+        console.log(response);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
+  };
 
   return (
-
     <>
       <div className="min-h-screen bg-gradient-to-r from-gray-100 to-gray-300 text-gray-900 flex justify-center items-center">
         <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow-lg sm:rounded-lg flex justify-center flex-1 transform transition-all duration-500 ease-in-out hover:scale-105">
@@ -38,7 +72,7 @@ const SignIn = () => {
               <p className="text-sm text-gray-500 mt-2">Join us and explore the amazing features!</p>
               <div className="w-full flex-1 mt-8">
                 <div className="my-12 border-b text-center"></div>
-                <div className="mx-auto max-w-xs">
+                <form onSubmit={handleSubmit} className="mx-auto max-w-xs">
                   <input
                     className="w-full px-8 py-4 my-3 rounded-lg font-medium bg-gray-100 border border-gray-300 placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-400 focus:bg-white transition-all duration-300 ease-in-out transform focus:scale-105"
                     type="text"
@@ -48,6 +82,8 @@ const SignIn = () => {
                     onChange={handleChange}
                     required
                   />
+                  {errors.name && <p className="text-red-500 text-xs italic">{errors.name}</p>}
+                  
                   <input
                     className="w-full px-8 py-4 my-3 rounded-lg font-medium bg-gray-100 border border-gray-300 placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-400 focus:bg-white transition-all duration-300 ease-in-out transform focus:scale-105"
                     type="email"
@@ -57,6 +93,8 @@ const SignIn = () => {
                     onChange={handleChange}
                     required
                   />
+                  {errors.email && <p className="text-red-500 text-xs italic">{errors.email}</p>}
+                  
                   <input
                     className="w-full px-8 py-4 my-3 rounded-lg font-medium bg-gray-100 border border-gray-300 placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-400 focus:bg-white transition-all duration-300 ease-in-out transform focus:scale-105"
                     type="password"
@@ -66,7 +104,12 @@ const SignIn = () => {
                     onChange={handleChange}
                     required
                   />
-                  <button  type="submit" className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none transform hover:scale-105">
+                  {errors.password && <p className="text-red-500 text-xs italic">{errors.password}</p>}
+                  
+                  <button
+                    type="submit"
+                    className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none transform hover:scale-105"
+                  >
                     <svg
                       className="w-6 h-6 -ml-2"
                       fill="none"
@@ -81,7 +124,7 @@ const SignIn = () => {
                     </svg>
                     <span className="ml-3">Sign Up</span>
                   </button>
-                </div>
+                </form>
               </div>
             </div>
           </div>

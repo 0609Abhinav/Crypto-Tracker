@@ -24,6 +24,7 @@ const Login = () => {
                 body:JSON.stringify(formData),
             });
             const response = await data.json();
+            console.log(response);
           }
           console.log(formData);
 
