@@ -14,8 +14,20 @@ app.use(helmet());
 // Logging
 app.use(morgan("dev"));
 
-// CORS
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+// CORS — allow configured origin(s) + localhost for dev
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:3000",
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow requests with no origin (mobile apps, curl, Render health checks)
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+}));
 
 // Body parser
 app.use(express.json());
