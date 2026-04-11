@@ -1,8 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
-import watchlistSliceReducer from "./watchlistSlice";
+import authReducer from "./authSlice";
+import watchlistReducer from "./watchlistSlice";
+import marketReducer from "./marketSlice";
+import currencyReducer from "./currencySlice";
 
 export const store = configureStore({
   reducer: {
-    watchlistSlice: watchlistSliceReducer,
+    auth: authReducer,
+    watchlist: watchlistReducer,
+    market: marketReducer,
+    currency: currencyReducer,
   },
 });

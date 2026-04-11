@@ -1,63 +1,21 @@
-import { useState, useEffect } from "react";
-import Cards from "../components/Cards";
-import { RotatingLines } from "react-loader-spinner";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchTrending } from "../store/marketSlice";
+import CardsGrid from "../components/CardsGrid";
 
-function Trending() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function Trending() {
+  const dispatch = useDispatch();
+  const { trending, trendingLoading } = useSelector((s) => s.market);
 
-  useEffect(() => {
-    const options = { method: "GET", headers: { accept: "application/json" } };
-
-    fetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false",
-      options
-    )
-      .then((response) => response.json())
-      .then((response) => {
-        setData(response);
-        setLoading(false); // Stop loading when data is fetched
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false); // Stop loading even if there's an error
-      });
-  }, []);
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          textAlign: "center",
-        }}
-      >
-        <h1 style={{ color: "#333", fontSize: "2rem", marginBottom: "1rem" }}>
-          Loading...
-        </h1>
-        <p style={{ color: "#666", fontSize: "1.2rem", marginBottom: "2rem" }}>
-          Please wait while we fetch the data.
-        </p>
-        <RotatingLines
-          strokeColor="red"
-          strokeWidth="6"
-          animationDuration="0.75"
-          width="100"
-          visible={true}
-        />
-      </div>
-    );
-  }
+  useEffect(() => { if (!trending.length) dispatch(fetchTrending()); }, [dispatch, trending.length]);
 
   return (
-    <div>
-      <Cards apiData={data} />
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>🔥 Trending Coins</h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: 15 }}>Most searched coins in the last 24 hours</p>
+      </div>
+      <CardsGrid coins={trending} loading={trendingLoading} skeletonCount={15} />
     </div>
   );
 }
-
-export default Trending;

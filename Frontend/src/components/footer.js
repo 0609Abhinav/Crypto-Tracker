@@ -1,87 +1,46 @@
-import { FaWhatsapp, FaFacebook, FaGithub, FaYoutube, FaTwitter, FaLinkedin } from "react-icons/fa";
-import React from 'react';
+import React from "react";
+import { Link } from "react-router-dom";
 
-const Footer = () => {
-    return (
-        <footer className="my-4 rounded-lg border-t-4 border-blue-500 shadow-lg w-full px-6 py-8 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-                {/* Logo and Tagline */}
-                <div className="mb-4 md:mb-0 text-center md:text-left">
-                    <h1 className="cursor-pointer text-[32px] font-extrabold">
-                        Crypto<span className="text-yellow-400">Tracker</span>
-                    </h1>
-                    <p className="mt-2 text-sm">Your gateway to the crypto world</p>
-                </div>
-
-                {/* Social Media Icons */}
-                <div className="flex gap-4 text-[30px]">
-                    <a href="tel:+91 9452100940" className="transition transform hover:scale-110 hover:text-green-500">
-                        <FaWhatsapp className="text-green-400" />
-                    </a>
-                    <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="transition transform hover:scale-110 hover:text-blue-500">
-                        <FaFacebook className="text-blue-300" />
-                    </a>
-                    <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="transition transform hover:scale-110 hover:text-red-500">
-                        <FaYoutube className="text-red-400" />
-                    </a>
-                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="transition transform hover:scale-110 hover:text-gray-300">
-                        <FaGithub className="text-white" />
-                    </a>
-                    <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="transition transform hover:scale-110 hover:text-blue-400">
-                        <FaTwitter className="text-blue-300" />
-                    </a>
-                    <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" className="transition transform hover:scale-110 hover:text-blue-600">
-                        <FaLinkedin className="text-blue-400" />
-                    </a>
-                </div>
-            </div>
-
-            {/* Divider */}
-            <div className="border-t border-gray-200 my-4"></div>
-
-{/* Newsletter Subscription and Contact */}
-<div className="flex flex-col md:flex-row justify-between items-center">
-    {/* Newsletter Subscription */}
-    <div className="mb-4 md:mb-0 text-center md:text-left">
-        <h2 className="text-[20px] font-bold">Subscribe to our Newsletter</h2>
-        <form 
-            className="mt-2 flex"
-            onSubmit={(e) => {
-                e.preventDefault();
-                const email = e.target.elements.email.value;
-                alert(`Subscribed by this email: ${email}`);
-            }}
-        >
-            <input
-                type="hidden"
-                name="token"
-                value="your-csrf-or-other-token-value"
-            />
-            <input
-                type="email"
-                name="email" // Added name attribute to access the input value
-                placeholder="Enter your email"
-                className="rounded-l-lg p-2 w-full md:w-72 text-gray-800"
-            />
-            <button
-                type="submit"
-                className="bg-yellow-400 text-white p-2 rounded-r-lg hover:bg-yellow-500 transition"
-            >
-                Subscribe
-            </button>
-        </form>
+export default function Footer() {
+  const col = (title, links) => (
+    <div key={title}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>{title}</div>
+      {links.map(([label, to]) => (
+        <div key={to} style={{ marginBottom: 9 }}>
+          <Link to={to} style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: 13, transition: "color 0.2s" }}
+            onMouseEnter={(e) => e.target.style.color = "var(--text-primary)"}
+            onMouseLeave={(e) => e.target.style.color = "var(--text-secondary)"}
+          >{label}</Link>
+        </div>
+      ))}
     </div>
+  );
 
-                {/* Contact Information */}
-                <div className="text-center md:text-right">
-                    <p className="text-sm">© 2024 CryptoTracker. All rights reserved.</p>
-                    <p className="text-sm">1234 Crypto Street, Blockchain City, CT 56789</p>
-                    <p className="text-sm">Email: support@cryptotracker.com</p>
-                    <p className="text-sm">Phone: +91 9452100940</p>
-                </div>
+  return (
+    <footer style={{ borderTop: "1px solid var(--border)", background: "var(--bg-secondary)", padding: "48px 20px 28px", marginTop: 80 }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 40, marginBottom: 40 }}>
+          <div style={{ maxWidth: 260 }}>
+            <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 10 }}>
+              Crypto<span style={{ color: "var(--accent)" }}>Tracker</span>
             </div>
-        </footer>
-    );
-};
-
-export default Footer;
+            <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.7 }}>
+              Real-time crypto prices, market data, news, and portfolio tracking — all free.
+            </p>
+            <div style={{ marginTop: 16, fontSize: 12, color: "var(--text-muted)" }}>
+              Data powered by <a href="https://coingecko.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>CoinGecko</a>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
+            {col("Markets", [["Market", "/market"], ["Trending", "/trending"], ["Gainers & Losers", "/gainers"], ["News", "/news"]])}
+            {col("Account", [["Login", "/login"], ["Sign Up", "/signup"], ["Watchlist", "/watchlist"], ["Profile", "/profile"]])}
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>© {new Date().getFullYear()} CryptoTracker. All rights reserved.</span>
+          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>Not financial advice. DYOR.</span>
+        </div>
+      </div>
+    </footer>
+  );
+}

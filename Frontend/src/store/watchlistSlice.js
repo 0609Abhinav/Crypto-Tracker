@@ -1,32 +1,70 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { watchlistAPI } from "../services/api";
+
+export const fetchWatchlist = createAsyncThunk("watchlist/fetch", async (_, { rejectWithValue }) => {
+  try {
+    const data = await watchlistAPI.get();
+    return data.coinIds;
+  } catch (err) {
+    return rejectWithValue(err.message);
+  }
+});
+
+export const addToWatchlist = createAsyncThunk("watchlist/add", async (coinId, { rejectWithValue }) => {
+  try {
+    const data = await watchlistAPI.add(coinId);
+    return data.coinIds;
+  } catch (err) {
+    return rejectWithValue(err.message);
+  }
+});
+
+export const removeFromWatchlist = createAsyncThunk("watchlist/remove", async (coinId, { rejectWithValue }) => {
+  try {
+    const data = await watchlistAPI.remove(coinId);
+    return data.coinIds;
+  } catch (err) {
+    return rejectWithValue(err.message);
+  }
+});
 
 const watchlistSlice = createSlice({
   name: "watchlist",
-  initialState: [],
+  initialState: { coinIds: [], loading: false, error: null },
   reducers: {
-    handleAddCoins(state, action) {
-      // Create a new state with the added coin
-      return [...state, action.payload];
+    clearWatchlist(state) {
+      state.coinIds = [];
     },
-    handleremovecoin(state, action) {
-      // Find the index of the coin to remove
-      const indexOfRemovingCoin = state.findIndex(
-        (obj) => JSON.stringify(obj) === JSON.stringify(action.payload)
-      );
-
-      // If the coin is found, create a new state without it
-      if (indexOfRemovingCoin > -1) {
-        return [
-          ...state.slice(0, indexOfRemovingCoin),
-          ...state.slice(indexOfRemovingCoin + 1),
-        ];
+    // Optimistic toggle — instant UI update before backend responds
+    optimisticAdd(state, action) {
+      if (!state.coinIds.includes(action.payload)) {
+        state.coinIds.push(action.payload);
       }
-
-      // Return the original state if the coin is not found
-      return state;
     },
+    optimisticRemove(state, action) {
+      state.coinIds = state.coinIds.filter((id) => id !== action.payload);
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchWatchlist.fulfilled, (state, action) => {
+        state.coinIds = action.payload;
+      })
+      // Sync with server response after optimistic update
+      .addCase(addToWatchlist.fulfilled, (state, action) => {
+        state.coinIds = action.payload;
+      })
+      .addCase(addToWatchlist.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(removeFromWatchlist.fulfilled, (state, action) => {
+        state.coinIds = action.payload;
+      })
+      .addCase(removeFromWatchlist.rejected, (state, action) => {
+        state.error = action.payload;
+      });
   },
 });
 
-export const { handleAddCoins, handleremovecoin } = watchlistSlice.actions;
+export const { clearWatchlist, optimisticAdd, optimisticRemove } = watchlistSlice.actions;
 export default watchlistSlice.reducer;

@@ -1,97 +1,171 @@
 import React, { useState } from "react";
-import { MdCurrencyBitcoin, MdHome, MdTrendingUp, MdStar, MdRemoveRedEye, MdMenu, MdClose } from 'react-icons/md';
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/authSlice";
+import { clearWatchlist } from "../store/watchlistSlice";
+import { useToast } from "./ui/Toast";
+import Button from "./ui/Button";
+import GlobalSearch from "./GlobalSearch";
+import CurrencySwitcher from "./CurrencySwitcher";
 
-function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function Navbar() {
+  const { user } = useSelector((s) => s.auth);
+  const { coinIds } = useSelector((s) => s.watchlist);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    dispatch(clearWatchlist());
+    toast("Logged out successfully", "info");
+    navigate("/");
+    setOpen(false);
+  };
+
+  const isActive = (to) => to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
+
+  const NAV_LINKS = [
+    { to: "/", label: "Home" },
+    { to: "/market", label: "Market" },
+    { to: "/trending", label: "Trending" },
+    { to: "/gainers", label: "Gainers" },
+    { to: "/news", label: "News" },
+    { to: "/watchlist", label: "Watchlist", badge: user && coinIds.length > 0 ? coinIds.length : null },
+  ];
 
   return (
-    <div className="border-b-2 shadow-lg bg-gradient-to-r from-blue-500 to-indigo-600">
-      <nav className="flex flex-col md:flex-row items-center px-4 md:px-6 py-4">
-        <div className="w-full flex justify-between items-center">
-          <Link to={"/"}>
-            <h1 className="text-[24px] md:text-[34px] lg:text-[40px] font-extrabold text-white cursor-pointer flex items-center">
-              Crypto 
-              <MdCurrencyBitcoin className="text-yellow-400 text-[24px] md:text-[34px] lg:text-[40px] mx-2 animate-pulse" />
-              <span className="text-white">Tracker</span>
-            </h1>
-          </Link>
+    <nav style={{
+      position: "sticky", top: 0, zIndex: 100,
+      background: "rgba(11,15,25,0.92)", backdropFilter: "blur(20px)",
+      borderBottom: "1px solid var(--border)",
+    }}>
+      <div style={{
+        maxWidth: 1200, margin: "0 auto", padding: "0 20px",
+        height: 64, display: "flex", alignItems: "center", gap: 16,
+      }}>
+        {/* Logo */}
+        <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <div style={{
+            width: 30, height: 30, borderRadius: 8,
+            background: "linear-gradient(135deg, var(--accent), #818cf8)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 15, fontWeight: 800, color: "#fff",
+          }}>₿</div>
+          <span style={{ fontWeight: 800, fontSize: 17, color: "var(--text-primary)" }} className="hide-mobile">
+            Crypto<span style={{ color: "var(--accent)" }}>Tracker</span>
+          </span>
+        </Link>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white text-[28px]"
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-            >
-              {isMenuOpen ? <MdClose /> : <MdMenu />}
-            </button>
-          </div>
+        {/* Desktop nav links */}
+        <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }} className="desktop-nav">
+          {NAV_LINKS.map(({ to, label, badge }) => (
+            <Link key={to} to={to} style={{
+              padding: "5px 11px", borderRadius: 8, textDecoration: "none",
+              fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 5,
+              color: isActive(to) ? "var(--accent)" : "var(--text-secondary)",
+              background: isActive(to) ? "rgba(99,102,241,0.1)" : "transparent",
+              transition: "all 0.2s", whiteSpace: "nowrap",
+            }}>
+              {label}
+              {badge && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: "1px 5px", borderRadius: 10,
+                  background: "var(--accent)", color: "#fff",
+                }}>{badge}</span>
+              )}
+            </Link>
+          ))}
         </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex justify-between items-center w-full mt-4 md:mt-0">
-          <div className="flex gap-6 font-semibold text-[14px] md:text-[18px] lg:text-[20px]">
-            <Link to={"/"} className="flex items-center cursor-pointer text-white hover:text-yellow-400 transition duration-300 ease-in-out">
-              <MdHome className="text-[20px] md:text-[24px] lg:text-[26px] mr-2" /> Home
-            </Link>
-            <Link to={"/top15"} className="flex items-center cursor-pointer text-white hover:text-yellow-400 transition duration-300 ease-in-out">
-              <MdStar className="text-[20px] md:text-[24px] lg:text-[26px] mr-2" /> Top15
-            </Link>
-            <Link to={"/trending"} className="flex items-center cursor-pointer text-white hover:text-yellow-400 transition duration-300 ease-in-out">
-              <MdTrendingUp className="text-[20px] md:text-[24px] lg:text-[26px] mr-2" /> Trending
-            </Link>
-            <Link to={"/watchlist"} className="flex items-center cursor-pointer text-white hover:text-yellow-400 transition duration-300 ease-in-out">
-              <MdRemoveRedEye className="text-[20px] md:text-[24px] lg:text-[26px] mr-2" /> Watchlist
-            </Link>
-          </div>
-          <div className="flex gap-4 ml-auto">
-            <Link to={"/login"}>
-              <button className="bg-blue-500 hover:bg-blue-600 text-white text-xs md:text-sm lg:text-base px-3 md:px-4 py-1 md:py-2 rounded-lg shadow-lg transition duration-300">
-                Login
-              </button>
-            </Link>
-            <Link to={"/signin"}>
-              <button className="bg-blue-500 hover:bg-blue-600 text-xs md:text-sm lg:text-base text-white px-3 md:px-4 py-1 md:py-2 rounded-lg shadow-lg transition duration-300">
-                Sign In
-              </button>
-            </Link>
-          </div>
+        {/* Search — takes remaining space */}
+        <div style={{ flex: 1, maxWidth: 280 }} className="desktop-nav">
+          <GlobalSearch />
         </div>
-      </nav>
 
-      {/* Mobile Menu */}
-      <div className={`md:hidden fixed inset-0 bg-blue-800 bg-opacity-90 backdrop-blur-lg shadow-lg transition-transform ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'} ease-in-out duration-500 z-50`}>
-        <div className="flex flex-col items-center py-8 space-y-6">
-          <Link to={"/"} onClick={() => setIsMenuOpen(false)} className="flex items-center text-[18px] font-semibold text-white hover:text-yellow-400 transition duration-300 ease-in-out">
-            <MdHome className="text-[24px] mr-3" /> Home
-          </Link>
-          <Link to={"/top15"} onClick={() => setIsMenuOpen(false)} className="flex items-center text-[18px] font-semibold text-white hover:text-yellow-400 transition duration-300 ease-in-out">
-            <MdStar className="text-[24px] mr-3" /> Top15
-          </Link>
-          <Link to={"/trending"} onClick={() => setIsMenuOpen(false)} className="flex items-center text-[18px] font-semibold text-white hover:text-yellow-400 transition duration-300 ease-in-out">
-            <MdTrendingUp className="text-[24px] mr-3" /> Trending
-          </Link>
-          <Link to={"/watchlist"} onClick={() => setIsMenuOpen(false)} className="flex items-center text-[18px] font-semibold text-white hover:text-yellow-400 transition duration-300 ease-in-out">
-            <MdRemoveRedEye className="text-[24px] mr-3" /> Watchlist
-          </Link>
+        {/* Currency + Auth */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <div className="desktop-nav"><CurrencySwitcher /></div>
 
-          <div className="flex flex-col gap-4">
-            <Link to={"/login"}onClick={() => setIsMenuOpen(false)}>
-              <button className="bg-blue-500 hover:bg-blue-600 text-white text-xs md:text-sm lg:text-base px-3 md:px-4 py-1 md:py-2 rounded-lg shadow-lg transition duration-300">
-                Login
+          {user ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={() => navigate("/profile")}
+                title={user.name}
+                style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  background: "linear-gradient(135deg, var(--accent), #818cf8)",
+                  border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 800, color: "#fff", flexShrink: 0,
+                }}
+              >
+                {user.name?.charAt(0).toUpperCase()}
               </button>
-            </Link>
-            <Link to={"/signin"} onClick={() => setIsMenuOpen(false)}>
-              <button className="bg-blue-500 hover:bg-blue-600 text-xs md:text-sm lg:text-base text-white px-3 md:px-4 py-1 md:py-2 rounded-lg shadow-lg transition duration-300">
-                Sign In
-              </button>
-            </Link>
-          </div>
+              <Button variant="ghost" size="sm" onClick={handleLogout} style={{ flexShrink: 0 }}>
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>Login</Button>
+              <Button size="sm" onClick={() => navigate("/signup")}>Sign Up</Button>
+            </>
+          )}
+
+          {/* Hamburger */}
+          <button
+            onClick={() => setOpen(!open)}
+            className="hamburger"
+            style={{
+              background: "none", border: "none", color: "var(--text-primary)",
+              cursor: "pointer", fontSize: 20, display: "none", padding: 4,
+            }}
+          >
+            {open ? "✕" : "☰"}
+          </button>
         </div>
       </div>
-    </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <div style={{
+          background: "var(--bg-secondary)", borderTop: "1px solid var(--border)",
+          padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 4,
+        }}>
+          <div style={{ marginBottom: 12 }}><GlobalSearch /></div>
+          {NAV_LINKS.map(({ to, label, badge }) => (
+            <Link key={to} to={to} onClick={() => setOpen(false)} style={{
+              padding: "10px 14px", borderRadius: 8, textDecoration: "none",
+              fontSize: 15, fontWeight: 500, display: "flex", alignItems: "center", gap: 8,
+              color: isActive(to) ? "var(--accent)" : "var(--text-primary)",
+            }}>
+              {label}
+              {badge && <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 10, background: "var(--accent)", color: "#fff" }}>{badge}</span>}
+            </Link>
+          ))}
+          <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+            <CurrencySwitcher />
+            {user ? (
+              <>
+                <button onClick={() => { navigate("/profile"); setOpen(false); }} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "inherit" }}>Profile</button>
+                <button onClick={handleLogout} style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "inherit" }}>Logout</button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => { navigate("/login"); setOpen(false); }}>Login</Button>
+                <Button size="sm" onClick={() => { navigate("/signup"); setOpen(false); }}>Sign Up</Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @media (max-width: 900px) { .desktop-nav { display: none !important; } .hamburger { display: block !important; } }
+      `}</style>
+    </nav>
   );
 }
-
-export default Navbar;

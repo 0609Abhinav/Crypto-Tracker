@@ -1,71 +1,198 @@
-import React from "react";
-import { FaBitcoin, FaEthereum, FaChartLine, FaMobileAlt, FaShieldAlt } from "react-icons/fa";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { fetchTrending, fetchMarket } from "../store/marketSlice";
+import CardsGrid from "../components/CardsGrid";
+import FearGreedWidget from "../components/FearGreedWidget";
+import { formatPrice, formatChange } from "../utils/format";
+import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
 
-function HomePage() {
+const MiniTicker = ({ coin, currencySymbol }) => {
+  const navigate = useNavigate();
+  const isPos = (coin.change ?? 0) >= 0;
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-5xl w-full mx-auto p-4">
-        <section className="text-center py-24 bg-blue-600 text-white rounded-lg">
-          <h1 className="text-5xl mb-8">Welcome to CryptoTrack</h1>
-          <p className="text-xl mb-10">
-            Track, analyze, and manage your digital assets with real-time data and powerful insights.
-          </p>
-          <a href="Trending">
-            <button className="bg-orange-500 text-white py-3 px-6 rounded-md text-lg hover:bg-orange-600 transition">
-              Start Tracking
-            </button>
-          </a>
-        </section>
+    <div
+      onClick={() => navigate(`/coin/${coin.id}`)}
+      style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "6px 12px", borderRadius: 8, cursor: "pointer",
+        background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+        flexShrink: 0, transition: "border-color 0.2s",
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--accent)"}
+      onMouseLeave={(e) => e.currentTarget.style.borderColor = "var(--border)"}
+    >
+      <img src={coin.image} alt={coin.name} style={{ width: 18, height: 18, borderRadius: "50%" }} />
+      <span style={{ fontSize: 12, fontWeight: 600 }}>{coin.symbol}</span>
+      <span style={{ fontSize: 12, fontWeight: 700 }}>{formatPrice(coin.price, currencySymbol)}</span>
+      <span style={{ fontSize: 11, fontWeight: 600, color: isPos ? "var(--green)" : "var(--red)" }}>
+        {isPos ? "▲" : "▼"} {formatChange(coin.change)}
+      </span>
+    </div>
+  );
+};
 
-        <section id="features" className="py-12 bg-gray-200 rounded-lg mt-8">
-          <h2 className="text-3xl mb-8 text-center">Features</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-lg text-center shadow-md">
-              <FaChartLine size={50} className="text-green-600 mx-auto mb-4" />
-              <h3 className="text-2xl mb-2">Real-Time Tracking</h3>
-              <p className="text-gray-600">Get up-to-the-minute updates on your favorite cryptocurrencies.</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg text-center shadow-md">
-              <FaBitcoin size={50} className="text-yellow-500 mx-auto mb-4" />
-              <h3 className="text-2xl mb-2">Bitcoin Insights</h3>
-              <p className="text-gray-600">In-depth analysis and historical data for Bitcoin.</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg text-center shadow-md">
-              <FaEthereum size={50} className="text-gray-800 mx-auto mb-4" />
-              <h3 className="text-2xl mb-2">Ethereum Analytics</h3>
-              <p className="text-gray-600">Track Ethereum's performance and trends.</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg text-center shadow-md">
-              <FaMobileAlt size={50} className="text-blue-600 mx-auto mb-4" />
-              <h3 className="text-2xl mb-2">Mobile Friendly</h3>
-              <p className="text-gray-600">Access your portfolio and track assets on the go.</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg text-center shadow-md">
-              <FaShieldAlt size={50} className="text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-2xl mb-2">Secure Management</h3>
-              <p className="text-gray-600">Your data and transactions are protected with top-level security.</p>
-            </div>
+export default function Home() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { trending, coins, trendingLoading, loading } = useSelector((s) => s.market);
+  const { user } = useSelector((s) => s.auth);
+  const { recent } = useRecentlyViewed();
+  const currency = useSelector((s) => s.currency.current);
+
+  useEffect(() => {
+    if (!trending.length) dispatch(fetchTrending());
+  }, [dispatch, trending.length]);
+
+  useEffect(() => {
+    dispatch(fetchMarket({ currency: currency.code }));
+  }, [dispatch, currency.code]);
+
+  const gainers = [...coins].filter((c) => c.change != null).sort((a, b) => b.change - a.change).slice(0, 4);
+  const losers = [...coins].filter((c) => c.change != null).sort((a, b) => a.change - b.change).slice(0, 4);
+  const tickerCoins = coins.slice(0, 8);
+
+  return (
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
+
+      {/* Hero */}
+      <div style={{
+        textAlign: "center", padding: "60px 20px 68px",
+        background: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.18) 0%, transparent 70%)",
+        borderRadius: 24, marginBottom: 48, position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0, opacity: 0.025,
+          backgroundImage: "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
+          backgroundSize: "40px 40px", pointerEvents: "none",
+        }} />
+        <div style={{
+          display: "inline-block", padding: "4px 14px", borderRadius: 20,
+          background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)",
+          fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 20, letterSpacing: 1.5,
+        }}>
+          LIVE CRYPTO DATA
+        </div>
+        <h1 style={{ fontSize: "clamp(30px, 5vw, 56px)", fontWeight: 800, lineHeight: 1.12, marginBottom: 18 }}>
+          Track Every Coin.<br />
+          <span style={{ color: "var(--accent)" }}>Make Smarter Moves.</span>
+        </h1>
+        <p style={{ fontSize: 17, color: "var(--text-secondary)", maxWidth: 500, margin: "0 auto 32px", lineHeight: 1.65 }}>
+          Real-time prices, market trends, news, and your personal watchlist — all in one place.
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <button onClick={() => navigate("/market")} style={{
+            padding: "12px 26px", borderRadius: 12, border: "none",
+            background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700,
+            cursor: "pointer", fontFamily: "inherit", transition: "opacity 0.2s",
+          }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = "0.85"}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+          >Explore Market →</button>
+          <button onClick={() => navigate("/news")} style={{
+            padding: "12px 26px", borderRadius: 12,
+            border: "1px solid var(--border)", background: "transparent",
+            color: "var(--text-primary)", fontSize: 14, fontWeight: 600,
+            cursor: "pointer", fontFamily: "inherit", transition: "border-color 0.2s",
+          }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--accent)"}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = "var(--border)"}
+          >Latest News</button>
+        </div>
+        {tickerCoins.length > 0 && (
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginTop: 32 }}>
+            {tickerCoins.map((c) => <MiniTicker key={c.id} coin={c} currencySymbol={currency.symbol} />)}
+          </div>
+        )}
+      </div>
+
+      {/* Recently Viewed */}
+      {recent.length > 0 && (
+        <section style={{ marginBottom: 48 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: "var(--text-secondary)" }}>
+            🕐 Recently Viewed
+          </h2>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {recent.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => navigate(`/coin/${c.id}`)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "8px 14px", borderRadius: 10, cursor: "pointer",
+                  background: "var(--bg-card)", border: "1px solid var(--border)",
+                  transition: "border-color 0.2s",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--accent)"}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = "var(--border)"}
+              >
+                <img src={c.image} alt={c.name} style={{ width: 22, height: 22, borderRadius: "50%" }} />
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{c.symbol}</span>
+                <span style={{ fontSize: 12, color: (c.change ?? 0) >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>
+                  {formatChange(c.change)}
+                </span>
+              </div>
+            ))}
           </div>
         </section>
+      )}
 
-        <section id="portfolio" className="py-12 text-center rounded-lg mt-8">
-          <h2 className="text-3xl mb-8">Track Your Portfolio</h2>
-          <p className="text-lg max-w-xl mx-auto text-gray-700">
-            Monitor your investments and track the performance of your portfolio with detailed analytics and customizable reports.
-          </p>
-          {/* Add a portfolio tracking widget or visualization here */}
+      {/* Main content + Fear & Greed sidebar */}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 200px", gap: 32, marginBottom: 56, alignItems: "start" }}>
+        <section style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700 }}>🔥 Trending Now</h2>
+            <button onClick={() => navigate("/trending")} style={{
+              background: "none", border: "none", color: "var(--accent)",
+              cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+            }}>View all →</button>
+          </div>
+          <CardsGrid coins={trending.slice(0, 8)} loading={trendingLoading} skeletonCount={8} />
         </section>
+        <div style={{ position: "sticky", top: 80 }}>
+          <FearGreedWidget />
+        </div>
+      </div>
 
-        <section id="performance" className="py-12 bg-gray-200 text-center rounded-lg mt-8">
-          <h2 className="text-3xl mb-8">Performance Insights</h2>
-          <p className="text-lg max-w-xl mx-auto text-gray-700">
-            Gain insights into market trends and make informed decisions with our advanced performance metrics.
-          </p>
-          {/* Add performance charts or visualizations here */}
+      {/* Gainers / Losers */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 28, marginBottom: 56 }}>
+        <section>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--green)" }}>▲ Top Gainers</h2>
+            <button onClick={() => navigate("/gainers")} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit" }}>See all →</button>
+          </div>
+          <CardsGrid coins={gainers} loading={loading} skeletonCount={4} />
+        </section>
+        <section>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--red)" }}>▼ Top Losers</h2>
+            <button onClick={() => navigate("/gainers")} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit" }}>See all →</button>
+          </div>
+          <CardsGrid coins={losers} loading={loading} skeletonCount={4} />
         </section>
       </div>
+
+      {/* CTA — guests only */}
+      {!user && (
+        <div style={{
+          background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05))",
+          border: "1px solid rgba(99,102,241,0.25)", borderRadius: 20,
+          padding: "36px 32px", display: "flex", alignItems: "center",
+          justifyContent: "space-between", flexWrap: "wrap", gap: 20,
+        }}>
+          <div>
+            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Never miss a move</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: 14, maxWidth: 380 }}>
+              Create a free account to save coins to your watchlist and track them in real time.
+            </p>
+          </div>
+          <button onClick={() => navigate("/signup")} style={{
+            padding: "12px 24px", borderRadius: 12, border: "none",
+            background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700,
+            cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+          }}>Get Started Free →</button>
+        </div>
+      )}
     </div>
   );
 }
-
-export default HomePage;

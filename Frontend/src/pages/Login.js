@@ -1,93 +1,148 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, Link } from "react-router-dom";
+import { loginUser, clearError } from "../store/authSlice";
+import { fetchWatchlist } from "../store/watchlistSlice";
+import { useToast } from "../components/ui/Toast";
 
+export default function Login() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { loading, error } = useSelector((s) => s.auth);
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [showPass, setShowPass] = useState(false);
 
+  useEffect(() => () => dispatch(clearError()), [dispatch]);
 
-
-const Login = () => {
-          const [formData,setFormData] = useState({
-            email:"",
-            password:"",
-          });
-
-          function handleChange(event) {
-            setFormData({...formData,[event.target.name]:event.target.value});
-          }
-
-          async function handleSubmit(event){
-            event.preventDefault();
-            const data= await fetch("http://localhost:3001/api/v1/login",{
-              method:"POST",
-              headers:{
-                "Content-Type":"application/json",
-                },
-                body:JSON.stringify(formData),
-            });
-            const response = await data.json();
-            console.log(response);
-          }
-          console.log(formData);
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const res = await dispatch(loginUser(form));
+    if (loginUser.fulfilled.match(res)) {
+      dispatch(fetchWatchlist());
+      toast(`Welcome back, ${res.payload.name?.split(" ")[0]}! 👋`, "success");
+      navigate("/");
+    } else {
+      toast(res.payload || "Login failed", "error");
+    }
+  };
 
   return (
+    <div style={{ width: "100%", maxWidth: 440 }}>
+      {/* Card */}
+      <div style={{
+        background: "var(--bg-card)",
+        border: "1px solid var(--border)",
+        borderRadius: 24,
+        padding: "44px 40px",
+        boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
+      }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 16,
+            background: "linear-gradient(135deg, var(--accent), #818cf8)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 24, margin: "0 auto 16px",
+          }}>₿</div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Welcome back</h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+            Sign in to your CryptoTracker account
+          </p>
+        </div>
 
-    <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
-      <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex justify-center flex-1">
-        <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-12">
-          <div className="mt-12 flex flex-col items-center">
-            <h1 className="text-2xl xl:text-3xl font-extrabold">Log in</h1>
-            <div className="w-full flex-1 mt-8">
-              <div className="my-12 border-b text-center"></div>
-              <form onSubmit={handleSubmit} className="mx-auto max-w-xs">
-                <input
-                  className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                  type="email"
-                  name="email"
-                  onChange={handleChange}
-                  value={formData.email}
-                  required
-                  placeholder="Email"
-                />
-                <input
-                  className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
-                  type="password"
-                  name="password"
-                  onChange={handleChange}
-                  value={formData.password}
-                  required
-                  placeholder="Password"
-                />
-                <button  type="submit" className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none">
-                  <svg
-                    className="w-6 h-6 -ml-2"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                    <circle cx="8.5" cy={7} r={4} />
-                    <path d="M20 8v6M23 11h-6" />
-                  </svg>
-                  <span className="ml-3">Log in</span>
-                </button>
-                </form>
-              </div>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {/* Email */}
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
+              Email address
+            </label>
+            <input
+              type="email" required
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="you@example.com"
+              style={{
+                width: "100%", padding: "12px 14px",
+                background: "var(--bg-primary)", border: "1px solid var(--border)",
+                borderRadius: 10, color: "var(--text-primary)", fontSize: 14,
+                outline: "none", fontFamily: "inherit", transition: "border-color 0.2s",
+                boxSizing: "border-box",
+              }}
+              onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
+              onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
+              Password
+            </label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPass ? "text" : "password"} required
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="••••••••"
+                style={{
+                  width: "100%", padding: "12px 44px 12px 14px",
+                  background: "var(--bg-primary)", border: "1px solid var(--border)",
+                  borderRadius: 10, color: "var(--text-primary)", fontSize: 14,
+                  outline: "none", fontFamily: "inherit", transition: "border-color 0.2s",
+                  boxSizing: "border-box",
+                }}
+                onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
+                onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+              />
+              <button type="button" onClick={() => setShowPass(!showPass)} style={{
+                position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", color: "var(--text-muted)",
+                cursor: "pointer", fontSize: 16, padding: 0,
+              }}>
+                {showPass ? "🙈" : "👁"}
+              </button>
             </div>
           </div>
-        <div className="flex-1 bg-indigo-100 text-center hidden lg:flex">
-          <div
-            className="m-12 xl:m-16 w-full bg-contain bg-center bg-no-repeat"
+
+          {/* Error */}
+          {error && (
+            <div style={{
+              padding: "10px 14px", borderRadius: 8,
+              background: "var(--red-bg)", border: "1px solid var(--red)",
+              color: "var(--red)", fontSize: 13, display: "flex", alignItems: "center", gap: 8,
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit" disabled={loading}
             style={{
-              backgroundImage:
-                'url("https://storage.googleapis.com/devitary-image-host.appspot.com/15848031292911696601-undraw_designer_life_w96d.svg")',
+              width: "100%", padding: "13px",
+              background: loading ? "var(--border)" : "var(--accent)",
+              color: "#fff", border: "none", borderRadius: 12,
+              fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer",
+              fontFamily: "inherit", transition: "opacity 0.2s",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}
-          ></div>
-        </div>
+            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.opacity = "0.88"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+          >
+            {loading ? (
+              <><span style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} /> Signing in...</>
+            ) : "Sign In →"}
+          </button>
+        </form>
+
+        <p style={{ textAlign: "center", marginTop: 24, fontSize: 14, color: "var(--text-secondary)" }}>
+          Don't have an account?{" "}
+          <Link to="/signup" style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>
+            Create one free
+          </Link>
+        </p>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

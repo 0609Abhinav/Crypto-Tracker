@@ -1,95 +1,205 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState, useCallback } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Cards from "../components/Cards";
+import { fetchWatchlist } from "../store/watchlistSlice";
+import { coingeckoAPI } from "../services/coingecko";
+import CardsGrid from "../components/CardsGrid";
+import Button from "../components/ui/Button";
 
-const Watchlist = () => {
-  const data = useSelector((store) => store.watchlistSlice);
-  const [loading, setLoading] = useState(true);
+export default function Watchlist() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { coinIds } = useSelector((s) => s.watchlist);
+  const { user } = useSelector((s) => s.auth);
+  const currency = useSelector((s) => s.currency.current);
 
+  const [coins, setCoins] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch watchlist IDs from backend on mount
   useEffect(() => {
-    const fetchData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate loading delay
+    if (user) dispatch(fetchWatchlist());
+  }, [user, dispatch]);
+
+  // Fetch actual coin data whenever coinIds changes
+  const loadCoins = useCallback(async (isRefresh = false) => {
+    if (!coinIds.length) { setCoins([]); return; }
+    isRefresh ? setRefreshing(true) : setLoading(true);
+    setError(null);
+    try {
+      // Fetch ONLY the watchlisted coins by ID — no filtering needed
+      const data = await coingeckoAPI.getCoinsByIds(coinIds, currency.code);
+      // Preserve the order from coinIds
+      const ordered = coinIds
+        .map((id) => data.find((c) => c.id === id))
+        .filter(Boolean);
+      setCoins(ordered);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err.message || "Failed to load watchlist data.");
+    } finally {
       setLoading(false);
-    };
+      setRefreshing(false);
+    }
+  }, [coinIds, currency.code]);
 
-    fetchData();
-  }, []);
+  useEffect(() => { loadCoins(); }, [loadCoins]);
 
-  const styles = {
-    container: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      backgroundColor: '#f3f4f6', // Tailwind's bg-gray-100
-    },
-    spinner: {
-      border: '8px solid #f3f3f3',
-      borderTop: '8px solid #3498db',
-      borderRadius: '50%',
-      width: '60px',
-      height: '60px',
-      animation: 'spin 2s linear infinite',
-    },
-    messageText: {
-      color: '#4a5568',
-      fontSize: '1.25rem',
-      textAlign: 'center',
-    },
-    heading: {
-      fontSize: '1.5rem',
-      fontWeight: 'bold',
-      color: '#2d3748',
-      textAlign: 'center',
-      marginBottom: '1.5rem',
-    },
-    emptyStateContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      backgroundColor: '#f3f4f6',
-    },
-    addItemButton: {
-      marginTop: '20px',
-      padding: '10px 20px',
-      fontSize: '1rem',
-      color: '#fff',
-      backgroundColor: '#3498db',
-      borderRadius: '5px',
-      border: 'none',
-      cursor: 'pointer',
-    },
-  };
-
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.spinner}></div>
-        <p style={styles.messageText}>Loading watchlist...</p>
-      </div>
-    );
-  }
-
-  return data.length === 0 ? (
-    <div style={styles.emptyStateContainer}>
-      <p style={styles.messageText}>
-        Your watchlist is empty. Start adding items to your watchlist!
+  // Not logged in
+  if (!user) return (
+    <div style={{
+      maxWidth: 480, margin: "120px auto",
+      textAlign: "center", padding: 20,
+    }}>
+      <div style={{
+        width: 80, height: 80, borderRadius: "50%",
+        background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 36, margin: "0 auto 24px",
+      }}>🔒</div>
+      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 10 }}>Login Required</h2>
+      <p style={{ color: "var(--text-secondary)", marginBottom: 28, lineHeight: 1.6 }}>
+        Sign in to access your personal watchlist and track your favourite coins.
       </p>
-      <button style={styles.addItemButton} onClick={() => navigate('/trending')}>
-        Add Item
-      </button>
-    </div>
-  ) : (
-    <div style={{ padding: '1rem', backgroundColor: '#f3f4f6', minHeight: '100vh' }}>
-      <h1 style={styles.heading}>Your Watchlist</h1>
-      <Cards apiData={data} />
+      <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+        <Button onClick={() => navigate("/login")}>Login</Button>
+        <Button variant="ghost" onClick={() => navigate("/signup")}>Sign Up</Button>
+      </div>
     </div>
   );
-};
 
-export default Watchlist;
+  return (
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
+
+      {/* Header */}
+      <div style={{
+        display: "flex", justifyContent: "space-between",
+        alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 36,
+      }}>
+        <div>
+          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>
+            ⭐ My Watchlist
+          </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            {/* Coin count badge */}
+            <span style={{
+              fontSize: 13, fontWeight: 600, padding: "3px 12px", borderRadius: 20,
+              background: "rgba(99,102,241,0.1)", color: "var(--accent)",
+              border: "1px solid rgba(99,102,241,0.2)",
+            }}>
+              {coinIds.length} coin{coinIds.length !== 1 ? "s" : ""}
+            </span>
+            {lastUpdated && (
+              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                Updated {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {coinIds.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            loading={refreshing}
+            onClick={() => loadCoins(true)}
+          >
+            ↻ Refresh
+          </Button>
+        )}
+      </div>
+
+      {/* Error banner */}
+      {error && (
+        <div style={{
+          padding: "14px 18px", borderRadius: 10, marginBottom: 24,
+          background: "var(--red-bg)", border: "1px solid var(--red)",
+          color: "var(--red)", fontSize: 14,
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          <span>⚠️ {error}</span>
+          <button
+            onClick={() => loadCoins()}
+            style={{
+              background: "none", border: "none", color: "var(--red)",
+              cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: "inherit",
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && !error && coinIds.length === 0 ? (
+        <div style={{
+          textAlign: "center", padding: "80px 20px",
+          background: "var(--bg-card)", border: "1px solid var(--border)",
+          borderRadius: 20,
+        }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: "50%",
+            background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 36, margin: "0 auto 20px",
+          }}>📋</div>
+          <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>
+            Your watchlist is empty
+          </h3>
+          <p style={{ color: "var(--text-secondary)", marginBottom: 28, maxWidth: 320, margin: "0 auto 28px" }}>
+            Star any coin from the market or trending page to track it here.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            <Button onClick={() => navigate("/market")}>Browse Market</Button>
+            <Button variant="ghost" onClick={() => navigate("/trending")}>View Trending</Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Watched coin image strip — visual indicator */}
+          {!loading && coins.length > 0 && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: -8,
+              marginBottom: 24, flexWrap: "wrap",
+            }}>
+              <div style={{ display: "flex" }}>
+                {coins.slice(0, 8).map((c, i) => (
+                  <img
+                    key={c.id}
+                    src={c.image}
+                    alt={c.name}
+                    title={c.name}
+                    style={{
+                      width: 28, height: 28, borderRadius: "50%",
+                      border: "2px solid var(--bg-primary)",
+                      marginLeft: i === 0 ? 0 : -8,
+                      zIndex: coins.length - i,
+                      position: "relative",
+                    }}
+                  />
+                ))}
+              </div>
+              {coins.length > 8 && (
+                <span style={{
+                  fontSize: 12, color: "var(--text-muted)",
+                  marginLeft: 8, fontWeight: 500,
+                }}>
+                  +{coins.length - 8} more
+                </span>
+              )}
+            </div>
+          )}
+
+          <CardsGrid
+            coins={coins}
+            loading={loading}
+            skeletonCount={coinIds.length || 4}
+          />
+        </>
+      )}
+    </div>
+  );
+}
