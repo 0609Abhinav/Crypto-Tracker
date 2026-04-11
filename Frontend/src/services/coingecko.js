@@ -1,13 +1,18 @@
-const BASE = process.env.REACT_APP_COINGECKO_URL;
+// In production, route through our backend proxy to avoid CORS + rate limits.
+// In development, hit CoinGecko directly.
+const DIRECT = process.env.REACT_APP_COINGECKO_URL;   // https://api.coingecko.com/api/v3
+const PROXY  = `${process.env.REACT_APP_API_URL}/cg`;  // https://our-backend/api/v1/cg
+
+const BASE = process.env.NODE_ENV === "production" ? PROXY : DIRECT;
 
 const get = async (path, retries = 2) => {
   for (let i = 0; i <= retries; i++) {
     const res = await fetch(`${BASE}${path}`, { headers: { accept: "application/json" } });
     if (res.status === 429) {
       if (i < retries) { await new Promise((r) => setTimeout(r, 2000 * (i + 1))); continue; }
-      throw new Error("Rate limited by CoinGecko. Please wait a moment.");
+      throw new Error("Rate limited. Please wait a moment.");
     }
-    if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
     return res.json();
   }
 };
@@ -33,7 +38,6 @@ export const normalizeCoin = (c) => ({
 });
 
 export const coingeckoAPI = {
-  // currency param wires up to the currency switcher
   getMarkets: (page = 1, currency = "usd") =>
     get(`/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=100&page=${page}&sparkline=true&price_change_percentage=7d`)
       .then((list) => list.map(normalizeCoin)),
