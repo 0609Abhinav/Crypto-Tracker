@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import GlobalStatsBar from "../components/GlobalStatsBar";
+import BackToTop from "../components/BackToTop";
 import { useScrollToTop } from "../hooks/useScrollToTop";
 
 export default function AppLayout() {
@@ -15,6 +16,7 @@ export default function AppLayout() {
         <Outlet />
       </main>
       <Footer />
+      <BackToTop />
     </div>
   );
 }

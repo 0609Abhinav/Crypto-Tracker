@@ -8,6 +8,7 @@ import { store } from "./store/store";
 import { ToastProvider } from "./components/ui/Toast";
 import { fetchMe, setInitialized } from "./store/authSlice";
 import { fetchWatchlist } from "./store/watchlistSlice";
+import { fetchPortfolio } from "./store/portfolioSlice";
 import AppLayout from "./layouts/AppLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -24,6 +25,14 @@ const NotFound     = lazy(() => import("./pages/NotFound"));
 const News         = lazy(() => import("./pages/News"));
 const GainersLosers= lazy(() => import("./pages/GainersLosers"));
 const Profile      = lazy(() => import("./pages/Profile"));
+const Portfolio    = lazy(() => import("./pages/Portfolio"));
+const Alerts       = lazy(() => import("./pages/Alerts"));
+const Converter    = lazy(() => import("./pages/Converter"));
+const Heatmap      = lazy(() => import("./pages/Heatmap"));
+const Compare      = lazy(() => import("./pages/Compare"));
+const GasTracker   = lazy(() => import("./pages/GasTracker"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword  = lazy(() => import("./pages/ResetPassword"));
 
 const PageLoader = () => (
   <div style={{ padding: "40px 20px", maxWidth: 1200, margin: "0 auto" }}>
@@ -41,7 +50,10 @@ const AuthBootstrap = ({ children }) => {
     const token = localStorage.getItem("token");
     if (token) {
       dispatch(fetchMe()).then((res) => {
-        if (fetchMe.fulfilled.match(res)) dispatch(fetchWatchlist());
+        if (fetchMe.fulfilled.match(res)) {
+          dispatch(fetchWatchlist());
+          dispatch(fetchPortfolio());
+        }
       });
     } else {
       dispatch(setInitialized());
@@ -77,6 +89,8 @@ const router = createBrowserRouter([
     children: [
       { path: "/login",  element: <Suspense fallback={<PageLoader />}><GuestOnly><Login /></GuestOnly></Suspense> },
       { path: "/signup", element: <Suspense fallback={<PageLoader />}><GuestOnly><Signup /></GuestOnly></Suspense> },
+      { path: "/forgot-password", element: <Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense> },
+      { path: "/reset-password/:token", element: <Suspense fallback={<PageLoader />}><ResetPassword /></Suspense> },
     ],
   },
   {
@@ -87,8 +101,14 @@ const router = createBrowserRouter([
       { path: "/trending",  element: S(Trending) },
       { path: "/gainers",   element: S(GainersLosers) },
       { path: "/news",      element: S(News) },
+      { path: "/heatmap",   element: S(Heatmap) },
+      { path: "/compare",   element: S(Compare) },
+      { path: "/converter", element: S(Converter) },
+      { path: "/gas",       element: S(GasTracker) },
       { path: "/coin/:id",  element: S(CoinDetail) },
       { path: "/watchlist", element: <Suspense fallback={<PageLoader />}><RequireAuth><Watchlist /></RequireAuth></Suspense> },
+      { path: "/portfolio", element: <Suspense fallback={<PageLoader />}><RequireAuth><Portfolio /></RequireAuth></Suspense> },
+      { path: "/alerts",    element: <Suspense fallback={<PageLoader />}><RequireAuth><Alerts /></RequireAuth></Suspense> },
       { path: "/profile",   element: <Suspense fallback={<PageLoader />}><RequireAuth><Profile /></RequireAuth></Suspense> },
       { path: "*",          element: S(NotFound) },
     ],

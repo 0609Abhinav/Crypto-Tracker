@@ -60,10 +60,19 @@ export const coingeckoAPI = {
   getGlobal: () => get(`/global`).then((r) => r.data),
 
   getCoinById: (id, currency = "usd") =>
-    get(`/coins/${id}?localization=false&tickers=false&community_data=true&developer_data=false`),
+    get(`/coins/${id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`),
 
   getCoinChart: (id, days, currency = "usd") =>
     get(`/coins/${id}/market_chart?vs_currency=${currency}&days=${days}`),
+
+  getCoinOHLC: (id, days, currency = "usd") =>
+    get(`/coins/${id}/ohlc?vs_currency=${currency}&days=${days}`),
+
+  getCoinTickers: (id) =>
+    new Promise((resolve) => setTimeout(resolve, 1200))
+      .then(() => get(`/coins/${id}/tickers?include_exchange_logo=true&depth=false&order=volume_desc`))
+      .then((r) => r.tickers?.slice(0, 10) ?? [])
+      .catch(() => []),
 
   searchCoins: (query) =>
     get(`/search?query=${encodeURIComponent(query)}`).then((r) => r.coins?.slice(0, 8) ?? []),

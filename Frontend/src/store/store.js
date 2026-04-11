@@ -3,6 +3,8 @@ import authReducer from "./authSlice";
 import watchlistReducer from "./watchlistSlice";
 import marketReducer from "./marketSlice";
 import currencyReducer from "./currencySlice";
+import portfolioReducer from "./portfolioSlice";
+import themeReducer from "./themeSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,5 +12,7 @@ export const store = configureStore({
     watchlist: watchlistReducer,
     market: marketReducer,
     currency: currencyReducer,
+    portfolio: portfolioReducer,
+    theme: themeReducer,
   },
 });

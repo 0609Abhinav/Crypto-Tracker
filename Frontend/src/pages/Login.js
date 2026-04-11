@@ -47,7 +47,7 @@ export default function Login() {
           }}>₿</div>
           <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Welcome back</h1>
           <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-            Sign in to your CryptoTracker account
+            Sign in to your CoinPulse account
           </p>
         </div>
 
@@ -76,9 +76,10 @@ export default function Login() {
 
           {/* Password */}
           <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
-              Password
-            </label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>Password</label>
+              <Link to="/forgot-password" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>Forgot password?</Link>
+            </div>
             <div style={{ position: "relative" }}>
               <input
                 type={showPass ? "text" : "password"} required

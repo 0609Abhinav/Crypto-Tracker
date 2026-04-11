@@ -20,6 +20,26 @@
   --yellow: #f59e0b;
 }
 
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-light: #cbd5e1;
+  --accent: #6366F1;
+  --accent-hover: #4f46e5;
+  --accent-glow: rgba(99, 102, 241, 0.15);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --green: #059669;
+  --green-bg: rgba(5, 150, 105, 0.1);
+  --red: #dc2626;
+  --red-bg: rgba(220, 38, 38, 0.1);
+  --yellow: #d97706;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -46,6 +66,10 @@ body {
   background-size: 1000px 100%;
   animation: shimmer 1.6s infinite linear;
   border-radius: 8px;
+}
+[data-theme="light"] .skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 1000px 100%;
 }
 
 /* Animations */

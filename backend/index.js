@@ -37,6 +37,9 @@ app.use("/api/v1/auth", rateLimit({
 }), require("./routes/auth"));
 
 app.use("/api/v1/watchlist", require("./routes/watchlist"));
+app.use("/api/v1/portfolio", require("./routes/portfolio"));
+app.use("/api/v1/alerts",    require("./routes/alerts"));
+app.use("/api/v1/prefs",     require("./routes/prefs"));
 
 app.get("/", (req, res) => res.json({ message: "CryptoTracker API running" }));
 

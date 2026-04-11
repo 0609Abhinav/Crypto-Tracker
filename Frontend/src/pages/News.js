@@ -101,22 +101,23 @@ export default function News() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [category, setCategory] = useState(CATEGORIES[0]);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 9;
 
   const fetchNews = useCallback(() => {
     setLoading(true);
     setError(null);
-    getNews(category.value, 18)
-      .then((data) => {
-        setArticles(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setArticles([]);
-      })
+    setPage(1);
+    getNews(category.value, 36)
+      .then((data) => { setArticles(Array.isArray(data) ? data : []); })
+      .catch((err) => { setError(err.message); setArticles([]); })
       .finally(() => setLoading(false));
   }, [category]);
 
   useEffect(() => { fetchNews(); }, [fetchNews]);
+
+  const totalPages = Math.max(1, Math.ceil(articles.length / PAGE_SIZE));
+  const paginated = articles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
@@ -169,11 +170,23 @@ export default function News() {
 
       {/* Articles grid */}
       {!loading && articles.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-          {articles.map((a, i) => (
-            <NewsCard key={a.id ?? a.url ?? i} article={a} />
-          ))}
-        </div>
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
+            {paginated.map((a, i) => (
+              <NewsCard key={a.id ?? a.url ?? i} article={a} />
+            ))}
+          </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 32, flexWrap: "wrap" }}>
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: page === 1 ? "var(--text-muted)" : "var(--text-secondary)", fontSize: 13, fontWeight: 600, cursor: page === 1 ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: page === 1 ? 0.4 : 1 }}>← Prev</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button key={p} onClick={() => setPage(p)} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid", borderColor: page === p ? "var(--accent)" : "var(--border)", background: page === p ? "rgba(99,102,241,0.1)" : "transparent", color: page === p ? "var(--accent)" : "var(--text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{p}</button>
+              ))}
+              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: page === totalPages ? "var(--text-muted)" : "var(--text-secondary)", fontSize: 13, fontWeight: 600, cursor: page === totalPages ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: page === totalPages ? 0.4 : 1 }}>Next →</button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Empty state */}

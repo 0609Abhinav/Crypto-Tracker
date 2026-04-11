@@ -22,7 +22,7 @@ export default function Footer() {
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 40, marginBottom: 40 }}>
           <div style={{ maxWidth: 260 }}>
             <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 10 }}>
-              Crypto<span style={{ color: "var(--accent)" }}>Tracker</span>
+              Coin<span style={{ color: "var(--accent)" }}>Pulse</span>
             </div>
             <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.7 }}>
               Real-time crypto prices, market data, news, and portfolio tracking — all free.
@@ -37,7 +37,7 @@ export default function Footer() {
           </div>
         </div>
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>© {new Date().getFullYear()} CryptoTracker. All rights reserved.</span>
+          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>© {new Date().getFullYear()} CoinPulse. All rights reserved.</span>
           <span style={{ color: "var(--text-muted)", fontSize: 12 }}>Not financial advice. DYOR.</span>
         </div>
       </div>

@@ -78,6 +78,49 @@ function CoinLinks({ coin }) {
   );
 }
 
+// ─── Exchange tickers ─────────────────────────────────────────────────────────
+
+function ExchangeTickers({ coinId }) {
+  const [tickers, setTickers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    coingeckoAPI.getCoinTickers(coinId)
+      .then(setTickers)
+      .catch(() => setTickers([]))
+      .finally(() => setLoading(false));
+  }, [coinId]);
+
+  if (!loading && !tickers.length) return null;
+
+  return (
+    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", marginTop: 20 }}>
+      <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "rgba(255,255,255,0.025)" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: 0.5 }}>Top Markets</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20 }}>
+          {Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 40, marginBottom: 8, borderRadius: 8 }} />)}
+        </div>
+      ) : (
+        tickers.slice(0, 8).map((t, i) => (
+          <a key={i} href={t.trade_url} target="_blank" rel="noopener noreferrer" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 12, padding: "12px 24px", borderBottom: "1px solid var(--border)", textDecoration: "none", transition: "background 0.12s" }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {t.market?.logo && <img src={t.market.logo} alt={t.market.name} style={{ width: 20, height: 20, borderRadius: 4 }} onError={(e) => e.target.style.display = "none"} />}
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{t.market?.name}</span>
+            </div>
+            <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.base}/{t.target}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>${t.converted_last?.usd?.toLocaleString("en-US", { maximumFractionDigits: 6 }) ?? "—"}</span>
+            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>${t.converted_volume?.usd ? (t.converted_volume.usd / 1e6).toFixed(2) + "M" : "—"} vol</span>
+          </a>
+        ))
+      )}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function CoinDetail() {
@@ -92,12 +135,14 @@ export default function CoinDetail() {
 
   const [coin, setCoin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   const isWatched = coinIds.includes(id);
 
   const fetchCoin = useCallback(async () => {
-    setLoading(true);
+    // First load → full skeleton. Currency change → silent refresh, keep existing data visible
+    if (coin) setRefreshing(true); else setLoading(true);
     setError(null);
     try {
       const data = await coingeckoAPI.getCoinById(id, currency.code);
@@ -115,8 +160,9 @@ export default function CoinDetail() {
       setError(err.message || "Failed to load coin data.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, [id, currency.code, addCoin]);
+  }, [id, currency.code, addCoin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetchCoin(); }, [fetchCoin]);
 
@@ -192,6 +238,12 @@ export default function CoinDetail() {
                   Rank #{coin.market_cap_rank}
                 </span>
               )}
+              {refreshing && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--accent)", fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)", marginLeft: 10 }}>
+                  <span style={{ width: 10, height: 10, border: "2px solid rgba(99,102,241,0.3)", borderTopColor: "var(--accent)", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+                  Updating...
+                </span>
+              )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <span style={{ fontSize: 30, fontWeight: 800 }}>{formatPrice(price, currency.symbol)}</span>
@@ -235,6 +287,9 @@ export default function CoinDetail() {
 
       {/* Links */}
       <CoinLinks coin={coin} />
+
+      {/* Exchange tickers */}
+      <ExchangeTickers coinId={id} />
     </div>
   );
 }
