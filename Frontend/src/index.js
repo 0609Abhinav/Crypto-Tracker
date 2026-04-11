@@ -9,6 +9,9 @@ import { ToastProvider } from "./components/ui/Toast";
 import { fetchMe, setInitialized } from "./store/authSlice";
 import { fetchWatchlist } from "./store/watchlistSlice";
 import { fetchPortfolio } from "./store/portfolioSlice";
+import { fetchPrefs, clearPrefs } from "./store/prefsSlice";
+import { setCurrencyFromDB } from "./store/currencySlice";
+import { setThemeFromDB } from "./store/themeSlice";
 import AppLayout from "./layouts/AppLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -53,6 +56,14 @@ const AuthBootstrap = ({ children }) => {
         if (fetchMe.fulfilled.match(res)) {
           dispatch(fetchWatchlist());
           dispatch(fetchPortfolio());
+          // Load user prefs from DB and apply currency + theme
+          dispatch(fetchPrefs()).then((prefsRes) => {
+            if (fetchPrefs.fulfilled.match(prefsRes)) {
+              const p = prefsRes.payload;
+              if (p.currency) dispatch(setCurrencyFromDB(p.currency));
+              if (p.theme)    dispatch(setThemeFromDB(p.theme));
+            }
+          });
         }
       });
     } else {

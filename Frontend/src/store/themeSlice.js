@@ -12,8 +12,15 @@ const themeSlice = createSlice({
       localStorage.setItem("theme", state.mode);
       document.documentElement.setAttribute("data-theme", state.mode);
     },
+    // Called after loading prefs from DB
+    setThemeFromDB(state, action) {
+      const mode = action.payload === "light" ? "light" : "dark";
+      state.mode = mode;
+      localStorage.setItem("theme", mode);
+      document.documentElement.setAttribute("data-theme", mode);
+    },
   },
 });
 
-export const { toggleTheme } = themeSlice.actions;
+export const { toggleTheme, setThemeFromDB } = themeSlice.actions;
 export default themeSlice.reducer;

@@ -20,10 +20,19 @@ const currencySlice = createSlice({
   reducers: {
     setCurrency(state, action) {
       state.current = action.payload;
+      // Always persist locally for instant load on next visit
       localStorage.setItem("preferred_currency", JSON.stringify(action.payload));
+    },
+    // Called after loading prefs from DB — sets currency without triggering DB save
+    setCurrencyFromDB(state, action) {
+      const match = CURRENCIES.find((c) => c.code === action.payload);
+      if (match) {
+        state.current = match;
+        localStorage.setItem("preferred_currency", JSON.stringify(match));
+      }
     },
   },
 });
 
-export const { setCurrency } = currencySlice.actions;
+export const { setCurrency, setCurrencyFromDB } = currencySlice.actions;
 export default currencySlice.reducer;

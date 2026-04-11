@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/authSlice";
 import { clearWatchlist } from "../store/watchlistSlice";
 import { clearPortfolio } from "../store/portfolioSlice";
+import { clearPrefs, savePrefs } from "../store/prefsSlice";
 import { toggleTheme } from "../store/themeSlice";
 import { useToast } from "./ui/Toast";
 import Button from "./ui/Button";
@@ -66,9 +67,16 @@ export default function Navbar() {
     dispatch(logout());
     dispatch(clearWatchlist());
     dispatch(clearPortfolio());
+    dispatch(clearPrefs());
     toast("Logged out successfully", "info");
     navigate("/");
     setOpen(false);
+  };
+
+  const handleThemeToggle = () => {
+    dispatch(toggleTheme());
+    // Save new theme to DB — mode will flip so we send the opposite
+    if (user) dispatch(savePrefs({ theme: mode === "dark" ? "light" : "dark" }));
   };
 
   const isActive = (to) => to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
@@ -138,7 +146,7 @@ export default function Navbar() {
 
           {/* Theme toggle */}
           <button
-            onClick={() => dispatch(toggleTheme())}
+            onClick={handleThemeToggle}
             title={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
             style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}
           >
@@ -177,7 +185,7 @@ export default function Navbar() {
           ))}
           <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <CurrencySwitcher />
-            <button onClick={() => dispatch(toggleTheme())} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer", padding: "5px 10px", fontSize: 14 }}>
+            <button onClick={handleThemeToggle} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer", padding: "5px 10px", fontSize: 14 }}>
               {mode === "dark" ? "☀️ Light" : "🌙 Dark"}
             </button>
             {user ? (

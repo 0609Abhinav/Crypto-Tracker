@@ -5,6 +5,7 @@ import marketReducer from "./marketSlice";
 import currencyReducer from "./currencySlice";
 import portfolioReducer from "./portfolioSlice";
 import themeReducer from "./themeSlice";
+import prefsReducer from "./prefsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
     currency: currencyReducer,
     portfolio: portfolioReducer,
     theme: themeReducer,
+    prefs: prefsReducer,
   },
 });

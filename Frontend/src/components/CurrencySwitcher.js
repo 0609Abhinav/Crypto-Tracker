@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useCurrency } from "../hooks/useCurrency";
+import { savePrefs } from "../store/prefsSlice";
+import { useDispatch } from "react-redux";
 
 export default function CurrencySwitcher() {
   const { currency, setCurrency, currencies } = useCurrency();
+  const dispatch = useDispatch();
+  const { user } = useSelector((s) => s.auth);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -11,6 +16,13 @@ export default function CurrencySwitcher() {
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
+
+  const handleSelect = (c) => {
+    setCurrency(c);
+    setOpen(false);
+    // Persist to DB if logged in
+    if (user) dispatch(savePrefs({ currency: c.code }));
+  };
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -37,7 +49,7 @@ export default function CurrencySwitcher() {
           {currencies.map((c) => (
             <button
               key={c.code}
-              onClick={() => { setCurrency(c); setOpen(false); }}
+              onClick={() => handleSelect(c)}
               style={{
                 width: "100%", padding: "9px 14px",
                 background: currency.code === c.code ? "rgba(99,102,241,0.1)" : "transparent",
