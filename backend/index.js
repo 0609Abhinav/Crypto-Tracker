@@ -18,16 +18,25 @@ app.use(morgan("dev"));
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:3000",
+  "https://crypto-tracker-1-mqn0.onrender.com",
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
-    // Allow requests with no origin (mobile apps, curl, Render health checks)
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error("Not allowed by CORS"));
+    // Allow requests with no origin (curl, Render health checks, mobile)
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    // In development, allow all
+    if (process.env.NODE_ENV !== "production") return cb(null, true);
+    cb(null, false);
   },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
+// Handle preflight for all routes
+app.options("*", cors());
 
 // Body parser
 app.use(express.json());
