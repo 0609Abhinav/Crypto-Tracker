@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { prefsAPI } from "../services/api";
-import { CURRENCIES } from "./currencySlice";
 
 // Load prefs from DB — called after login/bootstrap
 export const fetchPrefs = createAsyncThunk("prefs/fetch", async (_, { rejectWithValue }) => {

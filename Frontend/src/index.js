@@ -9,7 +9,7 @@ import { ToastProvider } from "./components/ui/Toast";
 import { fetchMe, setInitialized } from "./store/authSlice";
 import { fetchWatchlist } from "./store/watchlistSlice";
 import { fetchPortfolio } from "./store/portfolioSlice";
-import { fetchPrefs, clearPrefs } from "./store/prefsSlice";
+import { fetchPrefs } from "./store/prefsSlice";
 import { setCurrencyFromDB } from "./store/currencySlice";
 import { setThemeFromDB } from "./store/themeSlice";
 import AppLayout from "./layouts/AppLayout";
