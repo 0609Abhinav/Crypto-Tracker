@@ -129,7 +129,7 @@ const Card = memo(({ coin }) => {
 
       {/* Market cap */}
       <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
-        MCap: {formatLarge(coin.marketCap)}
+        MCap: {formatLarge(coin.marketCap, currency.symbol)}
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ export const formatPrice = (n, symbol = "$") => {
 };
 
 export const formatLarge = (n, symbol = "$") => {
-  if (n == null) return "N/A";
+  if (n == null || isNaN(n)) return "N/A";
   if (n >= 1e12) return `${symbol}${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9)  return `${symbol}${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6)  return `${symbol}${(n / 1e6).toFixed(2)}M`;

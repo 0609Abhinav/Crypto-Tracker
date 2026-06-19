@@ -17,16 +17,35 @@ const get = async (path, retries = 2) => {
   }
 };
 
+// Parse CoinGecko trending "data" fields — they return strings like "$2.55B" or numbers
+const parseMarketVal = (v) => {
+  if (v == null) return null;
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    // strip currency symbols and parse suffixes
+    const clean = v.replace(/[^0-9.BTKM]/gi, "");
+    const num = parseFloat(clean);
+    if (isNaN(num)) return null;
+    const suffix = v.slice(-1).toUpperCase();
+    if (suffix === "T") return num * 1e12;
+    if (suffix === "B") return num * 1e9;
+    if (suffix === "M") return num * 1e6;
+    if (suffix === "K") return num * 1e3;
+    return num;
+  }
+  return null;
+};
+
 export const normalizeCoin = (c) => ({
   id: c.id,
   name: c.name,
   symbol: c.symbol?.toUpperCase(),
   image: c.image || c.thumb || c.large,
-  price: c.current_price ?? c.data?.price ?? null,
+  price: c.current_price ?? parseMarketVal(c.data?.price) ?? null,
   change: c.price_change_percentage_24h ?? c.data?.price_change_percentage_24h?.usd ?? null,
   change7d: c.price_change_percentage_7d_in_currency ?? null,
-  marketCap: c.market_cap ?? c.data?.market_cap ?? null,
-  volume: c.total_volume ?? c.data?.total_volume ?? null,
+  marketCap: c.market_cap ?? parseMarketVal(c.data?.market_cap) ?? null,
+  volume: c.total_volume ?? parseMarketVal(c.data?.total_volume) ?? null,
   high24h: c.high_24h ?? null,
   low24h: c.low_24h ?? null,
   rank: c.market_cap_rank ?? null,
