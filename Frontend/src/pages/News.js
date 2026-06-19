@@ -88,12 +88,12 @@ const NewsSkeletons = ({ count = 9 }) => (
 );
 
 const CATEGORIES = [
-  { label: "All Crypto", value: "all" },
-  { label: "Bitcoin", value: "BTC" },
-  { label: "Ethereum", value: "ETH" },
-  { label: "DeFi", value: "DeFi" },
-  { label: "NFT", value: "NFT" },
-  { label: "Regulation", value: "Regulation" },
+  { label: "All Crypto", value: "all",        icon: "◉" },
+  { label: "Bitcoin",    value: "BTC",         icon: "₿" },
+  { label: "Ethereum",   value: "ETH",         icon: "⬡" },
+  { label: "DeFi",       value: "DeFi",        icon: "⟁" },
+  { label: "NFT",        value: "NFT",         icon: "◈" },
+  { label: "Regulation", value: "Regulation",  icon: "⚖" },
 ];
 
 export default function News() {
@@ -123,10 +123,16 @@ export default function News() {
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>📰 Crypto News</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-          Latest news from the crypto world
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a4 4 0 01-4-4V6"/>
+              <line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/>
+            </svg>
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 800 }}>Crypto News</h1>
+        </div>
+        <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>Latest news from the crypto world</p>
       </div>
 
       {/* Category filters */}
@@ -141,10 +147,10 @@ export default function News() {
               background: category.value === c.value ? "rgba(99,102,241,0.1)" : "transparent",
               color: category.value === c.value ? "var(--accent)" : "var(--text-secondary)",
               fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              transition: "all 0.15s",
+              transition: "all 0.15s", display: "flex", alignItems: "center", gap: 6,
             }}
           >
-            {c.label}
+            <span style={{ fontSize: 12 }}>{c.icon}</span>{c.label}
           </button>
         ))}
       </div>

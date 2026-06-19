@@ -44,6 +44,7 @@ export const normalizeCoin = (c) => ({
   price: c.current_price ?? parseMarketVal(c.data?.price) ?? null,
   change: c.price_change_percentage_24h ?? c.data?.price_change_percentage_24h?.usd ?? null,
   change7d: c.price_change_percentage_7d_in_currency ?? null,
+  change30d: c.price_change_percentage_30d_in_currency ?? null,
   marketCap: c.market_cap ?? parseMarketVal(c.data?.market_cap) ?? null,
   volume: c.total_volume ?? parseMarketVal(c.data?.total_volume) ?? null,
   high24h: c.high_24h ?? null,
@@ -58,12 +59,12 @@ export const normalizeCoin = (c) => ({
 
 export const coingeckoAPI = {
   getMarkets: (page = 1, currency = "usd") =>
-    get(`/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=100&page=${page}&sparkline=true&price_change_percentage=7d`)
+    get(`/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=100&page=${page}&sparkline=true&price_change_percentage=7d,30d`)
       .then((list) => list.map(normalizeCoin)),
 
   getCoinsByIds: (ids, currency = "usd") => {
     if (!ids.length) return Promise.resolve([]);
-    return get(`/coins/markets?vs_currency=${currency}&ids=${ids.join(",")}&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=7d`)
+    return get(`/coins/markets?vs_currency=${currency}&ids=${ids.join(",")}&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=7d,30d`)
       .then((list) => list.map(normalizeCoin));
   },
 

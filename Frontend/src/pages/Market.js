@@ -10,13 +10,21 @@ import { formatPrice, formatChange, formatLarge } from "../utils/format";
 import Sparkline from "../components/Sparkline";
 import { useCurrency } from "../hooks/useCurrency";
 import { clearCoins } from "../store/marketSlice";
+import { StarFilledIcon, StarIcon, SearchIcon, FilterIcon } from "../components/Icons";
 
 const PAGE_SIZES = [5, 20, 25, 30];
 const SORTS = [
-  { key: "rank", label: "Rank" },
-  { key: "price", label: "Price" },
-  { key: "change", label: "24h %" },
+  { key: "rank",      label: "Rank"       },
+  { key: "price",     label: "Price"      },
+  { key: "change",    label: "24h %"      },
   { key: "marketCap", label: "Market Cap" },
+];
+
+const CATEGORIES = [
+  { key: "all",       label: "All"        },
+  { key: "watchlist", label: "Watchlisted" },
+  { key: "top10",     label: "Top 10"     },
+  { key: "top100",    label: "Top 100"    },
 ];
 
 // ─── Pagination button ────────────────────────────────────────────────────────
@@ -41,27 +49,21 @@ const PBtn = ({ onClick, disabled, active, children }) => (
   </button>
 );
 
-// ─── Search icon ──────────────────────────────────────────────────────────────
-const SearchIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-);
-
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Market() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const toast = useToast();
-  const { coins, loading } = useSelector((s) => s.market);
-  const { coinIds } = useSelector((s) => s.watchlist);
-  const { user } = useSelector((s) => s.auth);
+  const toast    = useToast();
+  const { coins, loading }  = useSelector((s) => s.market);
+  const { coinIds }         = useSelector((s) => s.watchlist);
+  const { user }            = useSelector((s) => s.auth);
 
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("rank");
-  const [sortDir, setSortDir] = useState("asc");
-  const [page, setPage] = useState(1);
+  const [search,   setSearch]   = useState("");
+  const [sort,     setSort]     = useState("rank");
+  const [sortDir,  setSortDir]  = useState("asc");
+  const [page,     setPage]     = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [category, setCategory] = useState("all");
   const debouncedSearch = useDebounce(search);
   const { currency } = useCurrency();
 
@@ -69,23 +71,32 @@ export default function Market() {
     dispatch(clearCoins());
     dispatch(fetchMarket({ currency: currency.code }));
   }, [dispatch, currency.code]);
-  useEffect(() => { setPage(1); }, [debouncedSearch, sort, sortDir, pageSize]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, sort, sortDir, pageSize, category]);
 
   const filtered = useMemo(() => {
     let list = [...coins];
+
+    // Category filter
+    if (category === "watchlist") list = list.filter((c) => coinIds.includes(c.id));
+    if (category === "top10")     list = list.filter((c) => c.rank <= 10);
+    if (category === "top100")    list = list.filter((c) => c.rank <= 100);
+
+    // Search
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       list = list.filter((c) => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q));
     }
+
+    // Sort
     list.sort((a, b) => {
       const av = a[sort] ?? 0, bv = b[sort] ?? 0;
       return sortDir === "asc" ? av - bv : bv - av;
     });
     return list;
-  }, [coins, debouncedSearch, sort, sortDir]);
+  }, [coins, debouncedSearch, sort, sortDir, category, coinIds]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const toggleSort = (key) => {
     if (sort === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -108,8 +119,8 @@ export default function Market() {
 
   const getPageNumbers = () => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (page <= 4) return [1, 2, 3, 4, 5, "...", totalPages];
-    if (page >= totalPages - 3) return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    if (page <= 4)               return [1, 2, 3, 4, 5, "...", totalPages];
+    if (page >= totalPages - 3)  return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
     return [1, "...", page - 1, page, page + 1, "...", totalPages];
   };
 
@@ -120,11 +131,13 @@ export default function Market() {
       cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "inherit",
       display: "flex", alignItems: "center", gap: 3, textTransform: "uppercase", letterSpacing: 0.5,
     }}>
-      {label}{sort === k ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+      {label}
+      {sort === k && (
+        <span style={{ fontSize: 10 }}>{sortDir === "asc" ? " ↑" : " ↓"}</span>
+      )}
     </button>
   );
 
-  // Serial number = global position in filtered list
   const getSerial = (idx) => (page - 1) * pageSize + idx + 1;
 
   return (
@@ -138,6 +151,26 @@ export default function Market() {
         </p>
       </div>
 
+      {/* Category filter chips */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <FilterIcon size={14} color="var(--text-muted)" />
+        {CATEGORIES.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setCategory(key)}
+            style={{
+              padding: "6px 14px", borderRadius: 20, border: "1px solid",
+              borderColor: category === key ? "var(--accent)" : "var(--border)",
+              background: category === key ? "rgba(99,102,241,0.12)" : "transparent",
+              color: category === key ? "var(--accent)" : "var(--text-secondary)",
+              fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+            }}
+          >
+            {key === "watchlist" && "★ "}{label}
+          </button>
+        ))}
+      </div>
+
       {/* Controls row */}
       <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
 
@@ -147,7 +180,7 @@ export default function Market() {
             position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)",
             color: "var(--text-muted)", display: "flex", alignItems: "center", pointerEvents: "none",
           }}>
-            <SearchIcon />
+            <SearchIcon size={14} />
           </span>
           <input
             value={search}
@@ -233,9 +266,9 @@ export default function Market() {
 
         {/* Data rows */}
         {!loading && paginated.map((coin, idx) => {
-          const isPos = (coin.change ?? 0) >= 0;
-          const isWatched = coinIds.includes(coin.id);
-          const serial = getSerial(idx);
+          const isPos      = (coin.change ?? 0) >= 0;
+          const isWatched  = coinIds.includes(coin.id);
+          const serial     = getSerial(idx);
           return (
             <div
               key={coin.id}
@@ -273,8 +306,13 @@ export default function Market() {
               <span style={{
                 fontSize: 13, fontWeight: 700,
                 color: isPos ? "var(--green)" : "var(--red)",
+                display: "flex", alignItems: "center", gap: 3,
               }}>
-                {isPos ? "▲" : "▼"} {formatChange(coin.change)}
+                {isPos
+                  ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                  : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                }
+                {formatChange(coin.change)}
               </span>
 
               {/* Market cap */}
@@ -288,13 +326,21 @@ export default function Market() {
               {/* Watchlist star */}
               <button
                 onClick={(e) => handleStar(e, coin)}
+                title={isWatched ? "Remove from watchlist" : "Add to watchlist"}
                 style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  fontSize: 18, color: isWatched ? "var(--yellow)" : "var(--text-muted)",
-                  transition: "color 0.2s", padding: 0,
+                  background: isWatched ? "rgba(245,158,11,0.08)" : "none",
+                  border: "none", cursor: "pointer",
+                  color: isWatched ? "var(--yellow)" : "var(--text-muted)",
+                  transition: "color 0.2s", padding: 4, borderRadius: 6,
+                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}
+                onMouseEnter={(e) => { if (!isWatched) e.currentTarget.style.color = "var(--yellow)"; }}
+                onMouseLeave={(e) => { if (!isWatched) e.currentTarget.style.color = "var(--text-muted)"; }}
               >
-                {isWatched ? "★" : "☆"}
+                {isWatched
+                  ? <StarFilledIcon size={17} color="var(--yellow)" />
+                  : <StarIcon size={17} color="currentColor" />
+                }
               </button>
             </div>
           );
@@ -302,8 +348,13 @@ export default function Market() {
 
         {/* Empty state */}
         {!loading && filtered.length === 0 && (
-          <div style={{ padding: "48px 20px", textAlign: "center", color: "var(--text-muted)" }}>
-            No coins found for "{search}"
+          <div style={{ padding: "60px 20px", textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <SearchIcon size={22} color="var(--accent)" />
+            </div>
+            <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
+              {search ? `No coins found for "${search}"` : "No coins in this category"}
+            </p>
           </div>
         )}
       </div>
@@ -314,12 +365,10 @@ export default function Market() {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           marginTop: 20, flexWrap: "wrap", gap: 12,
         }}>
-          {/* Info */}
           <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
             Showing <strong style={{ color: "var(--text-secondary)" }}>{(page - 1) * pageSize + 1}</strong>–<strong style={{ color: "var(--text-secondary)" }}>{Math.min(page * pageSize, filtered.length)}</strong> of <strong style={{ color: "var(--text-secondary)" }}>{filtered.length}</strong>
           </span>
 
-          {/* Page buttons */}
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <PBtn onClick={() => setPage(1)} disabled={page === 1}>«</PBtn>
             <PBtn onClick={() => setPage((p) => p - 1)} disabled={page === 1}>‹</PBtn>
@@ -336,7 +385,6 @@ export default function Market() {
             <PBtn onClick={() => setPage(totalPages)} disabled={page === totalPages}>»</PBtn>
           </div>
 
-          {/* Page x of y */}
           <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
             Page <strong style={{ color: "var(--text-secondary)" }}>{page}</strong> of <strong style={{ color: "var(--text-secondary)" }}>{totalPages}</strong>
           </span>

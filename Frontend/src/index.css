@@ -18,6 +18,7 @@
   --red: #ef4444;
   --red-bg: rgba(239, 68, 68, 0.1);
   --yellow: #f59e0b;
+  --yellow-bg: rgba(245, 158, 11, 0.1);
 }
 
 [data-theme="light"] {
@@ -38,6 +39,7 @@
   --red: #dc2626;
   --red-bg: rgba(220, 38, 38, 0.1);
   --yellow: #d97706;
+  --yellow-bg: rgba(217, 119, 6, 0.1);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -80,6 +82,36 @@ body {
 .fade-in { animation: fadeIn 0.3s ease forwards; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Live pulse dot animation */
+@keyframes pulse-ring {
+  0%   { transform: scale(0.9); opacity: 0.8; }
+  70%  { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+.live-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.live-dot::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-ring 2s ease-out infinite;
+  opacity: 0;
+}
+
+/* Micro-animations */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.slide-up { animation: slideUp 0.3s ease forwards; }
 
 /* Responsive helpers */
 @media (max-width: 768px) {
